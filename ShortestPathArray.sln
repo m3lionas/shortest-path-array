@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shortest-path-array", "shortest-path-array\shortest-path-array.csproj", "{9842D80B-9329-4382-B38A-CB29CA8A97BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShortestPathArray", "shortest-path-array\ShortestPathArray.csproj", "{9842D80B-9329-4382-B38A-CB29CA8A97BA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShortestPathUnitTests", "ShortestPathUnitTests\ShortestPathUnitTests.csproj", "{39501AC7-B7CB-467D-A6CA-495ACEF44BCC}"
 EndProject

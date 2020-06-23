@@ -22,7 +22,7 @@ namespace shortest_path_array
         */
         public static (string solution, int steps) FindBestPath(int[] arr)
         {
-            if (arr.Length < 1) //array consists of one element
+            if (arr.Length == 1) //array consists of one element
                 return ("-", 0);
 
             if (arr[0] < 1)     //first element of array is 0 or less

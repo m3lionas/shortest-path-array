@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\shortest-path-array\shortest-path-array.csproj" />
+    <ProjectReference Include="..\shortest-path-array\ShortestPathArray.csproj" />
   </ItemGroup>
 
 </Project>
