@@ -10,48 +10,105 @@ namespace shortest_path_array
 {
     public class MainProgram
     {
-        public static ArrayList inputArrays = new ArrayList();
         public static Dictionary<string, ValueTuple<string, int>> calculatedArrays = new Dictionary<string, ValueTuple<string, int>>();
 
-        public static void printAllCalculatedArrays()
+        /*
+         * Main algorithm to solve the problem.
+         * The idea is to take the last element of the array and
+         * search for an element that is the furthest on the left
+         * and can jump to it. Then we take that element and repeat
+         * what we did for the last element of the array until we
+         * reach the start of the array.
+        */
+        public static (string solution, int steps) FindBestPath(int[] arr)
         {
-            Console.WriteLine();
-            Console.WriteLine("Want to see all solutions that were already calculated? [y/n]");
-            if (Console.ReadKey(true).Key == ConsoleKey.Y)
+            if (arr.Length < 1) //array consists of one element
+                return ("-", 0);
+
+            if (arr[0] < 1)     //first element of array is 0 or less
+                return ("-", -1);
+
+            int position = arr.Length - 1; //position of the targeted element
+            int prevPosition;
+            int steps = 0;
+            string result = arr[position].ToString();
+
+            while (position != 0)
             {
-                foreach (var item in calculatedArrays)
+                prevPosition = position;
+                for (int i = 0; i < position; i++)
                 {
-                    Console.WriteLine("Problem: " + item.Key);
-                    Console.WriteLine("Path: " + item.Value.Item1);
-                    Console.Write("Number of steps: " + item.Value.Item2);
-                    if (item.Value.Item2 < 0)
+                    if (arr[i] >= position - i) //if element arr[i] can jump to target element position
+                    {
+                        position = i; //now arr[i] will become the target element position
+                        steps++; //we took a step
+
+                        result = result.Insert(0, arr[i].ToString() + " ");
+                    }
+                }
+                if (prevPosition == position) return ("-", -1); //we couldn't find an element that could jump to target
+            }
+            return (result, steps);
+        }
+
+        public static void ProcessInput()
+        {
+            //reading a batch of arrays from input file
+            Console.WriteLine("Getting inputs from file...");
+            Console.WriteLine();
+
+            string[] lines = null;
+            try
+            {
+                lines = System.IO.File.ReadAllLines("input.txt");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception while reading from input file: " + e.Message);
+            }
+
+            //processing each array
+            foreach (var line in lines)
+            {
+                Console.WriteLine("Problem: " + line);
+                if (calculatedArrays.TryGetValue(line, out (string, int) value)) //if we already know a solution
+                {
+                    Console.WriteLine("Precalculated path: " + value.Item1);
+                    Console.Write("Precalculated number of steps: " + value.Item2);
+                    if (value.Item2 < 0)
                         Console.WriteLine(" (no solution for this problem)");
                     else
                         Console.WriteLine();
                     Console.WriteLine();
-
+                    continue;
                 }
-            }
-        }
-        public static void WriteSolutionToFile(string problem, ValueTuple<string, int> solution)
-        {
-            try
-            {
-                using (System.IO.StreamWriter file =
-                new System.IO.StreamWriter("solutions.txt", true))
+
+                int[] ia = null;
+                try
                 {
-                    file.WriteLine(problem);
-                    file.WriteLine(solution.Item1);
-                    file.WriteLine(solution.Item2);
+                    ia = line.Split(' ').Select(s => Convert.ToInt32(s)).ToArray(); //string into int array
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception while writing to file: " + e.Message);
+                catch (FormatException)
+                {
+                    Console.WriteLine($"Unable to parse '{line}' from input file");
+                    continue;
+                }
+
+                var result = FindBestPath(ia); //calculate best path
+                Console.WriteLine("Path: " + result.Item1);
+                Console.Write("Number of steps: " + result.Item2);
+                if (result.Item2 < 0)
+                    Console.WriteLine(" (no solution for this problem)");
+                else
+                    Console.WriteLine();
+                Console.WriteLine();
+
+                calculatedArrays.Add(line, result);
+                WriteSolutionToFile(line, result);
             }
         }
 
-        public static void ReadSolutionsFromFile()
+        public static void ReadSolutionsFromFile() //read already precalculated solutions from file
         {
             String line, solution, stepsString;
             try
@@ -73,9 +130,9 @@ namespace shortest_path_array
                         //there's already a solution for this line in calculatedArrays, so no action should be taken
                     }
                     catch (FormatException)
-                        {
-                            Console.WriteLine($"Unable to parse '{stepsString}'");
-                        }
+                    {
+                        Console.WriteLine($"Unable to parse '{stepsString}'");
+                    }
                     line = sr.ReadLine();
                 }
                 //close the file
@@ -83,118 +140,77 @@ namespace shortest_path_array
             }
             catch (Exception e)
             {
-                Console.WriteLine("Exception while reading from file: " + e.Message);
+                Console.WriteLine("Exception while reading solutions from file: " + e.Message);
             }
         }
 
-        public static void readInputFromFile() //catch Format exception
+        public static void WriteSolutionToFile(string problem, ValueTuple<string, int> solution)
         {
-           string[] lines = System.IO.File.ReadAllLines("input.txt");
-           foreach (var line in lines)
+            try
             {
-                Console.WriteLine(line);
-                ValueTuple<string,int> value;
-                if (calculatedArrays.TryGetValue(line, out value))
+                using (System.IO.StreamWriter file =
+                new System.IO.StreamWriter("solutions.txt", true))
                 {
-                    Console.WriteLine("got it already: " + value);
-                    continue;
+                    file.WriteLine(problem);
+                    file.WriteLine(solution.Item1);
+                    file.WriteLine(solution.Item2);
                 }
-                int[] ia = line.Split(' ').Select(s => Convert.ToInt32(s)).ToArray();
-                //Console.WriteLine(String.Join(",", ia));
-
-                var result = Jumpy2(ia);
-                Console.WriteLine(result);
-
-                calculatedArrays.Add(line, result);
-                WriteSolutionToFile(line, result);
-
-                inputArrays.Add(ia);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception while writing to file: " + e.Message);
             }
         }
-        public static int jumpy(int[] arr)
+
+        public static void PrintCalculatedArrays() //CLI to display known solutions
         {
-            if (arr.Length <= 1)
-                return 0;
+            Console.WriteLine();
+            Console.WriteLine("To see all solutions that were already calculated press 'A'");
+            Console.WriteLine("To search for a single already known solution press 'S'");
+            Console.WriteLine("Press any other key to quit");
 
-            if (arr[0] < 1)
-                return -1;
 
-            int position = arr.Length - 1;
-            int prevPosition;
-            int steps = 0;
-
-            while (position != 0)
+            if (Console.ReadKey(true).Key == ConsoleKey.A)
             {
-                prevPosition = position;
-                for (int i = 0; i < position; i++)
+                foreach (var item in calculatedArrays)
                 {
-                    if (arr[i] >= position - i)
-                    {
-                        position = i;
-                        Console.WriteLine(arr[i]);
-                        steps++;
-                        //break;
-                    }
+                    Console.WriteLine("Problem: " + item.Key);
+                    Console.WriteLine("Path: " + item.Value.Item1);
+                    Console.Write("Number of steps: " + item.Value.Item2);
+                    if (item.Value.Item2 < 0)
+                        Console.WriteLine(" (no solution for this problem)");
+                    else
+                        Console.WriteLine();
+                    Console.WriteLine();
                 }
-                if (prevPosition == position) return -1;
             }
-            return steps;
-        }
 
-        public static (string solution, int steps) Jumpy2(int[] arr)
-        {
-            if (arr.Length <= 1)
-                return ("-", 0);
-
-            if (arr[0] < 1)
-                return ("-", -1);
-
-            int position = arr.Length - 1;
-            int prevPosition;
-            int steps = 0;
-            string result = arr[position].ToString();
-
-            while (position != 0)
+            if (Console.ReadKey(true).Key == ConsoleKey.S)
             {
-                prevPosition = position;
-                for (int i = 0; i < position; i++)
+                Console.WriteLine("Write the number array seperating each number with a single space and press Enter");
+                string line = Console.ReadLine();
+                if (calculatedArrays.TryGetValue(line, out (string, int) value)) //if we already know a solution
                 {
-                    if (arr[i] >= position - i)
-                    {
-                        position = i;
-                        steps++;
-
-                        result = result.Insert(0, arr[i].ToString() + " ");
-                        //result = result.Insert(0, arr[i].ToString());
-                        //result += " ";
-                        //result += arr[i].ToString();
-                    }
+                    Console.WriteLine("Path: " + value.Item1);
+                    Console.Write("Number of steps: " + value.Item2);
+                    if (value.Item2 < 0)
+                        Console.WriteLine(" (no solution for this problem)");
+                    else
+                        Console.WriteLine();
+                    Console.WriteLine();
                 }
-                if (prevPosition == position) return ("-", -1);
+                else
+                {
+                    Console.WriteLine("Couldn't find a precalculated solution for this problem.");
+                }
             }
-            //Console.WriteLine("End result: " + result);
-            return (result, steps);
         }
-
-
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-
-            int[] arr = new int[] { 1, 3, -4, 2, -9, 2, 0, 5, 6, 8, 9 };
-            int[] arr1 = new int[] { 1, 2, 0, 3, 0, 2, 0};
-
-            //Console.WriteLine(String.Join(" ", arr1));
             ReadSolutionsFromFile();
-            readInputFromFile();
-            printAllCalculatedArrays();
-
-            // calling minJumps method 
-            //Console.WriteLine(minJumps(arr1));
-            //Console.WriteLine();
-            //Console.WriteLine(jumpy(arr1));
-
+            ProcessInput();
+            PrintCalculatedArrays();
         }
     }
 }
